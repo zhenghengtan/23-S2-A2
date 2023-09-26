@@ -51,8 +51,7 @@ class TrailSeries:
         Returns a *new* trail which would be the result of:
         Adding a mountain in series before the current one.
         """
-        new_series = TrailSeries(mountain, Trail(self))
-        return new_series
+        return TrailSeries(mountain, Trail(self))
 
     def add_empty_branch_before(self) -> TrailStore:
         """Returns a *new* trail which would be the result of:
