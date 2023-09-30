@@ -1,4 +1,5 @@
 from __future__ import annotations
+from bisect import insort_left
 
 from mountain import Mountain
 
