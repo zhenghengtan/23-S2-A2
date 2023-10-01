@@ -5,6 +5,9 @@ from mountain import Mountain
 
 from typing import TYPE_CHECKING, Union
 
+from data_structures.stack_adt import Stack
+
+
 # Avoid circular imports for typing.
 if TYPE_CHECKING:
     from personality import WalkerPersonality
@@ -97,7 +100,32 @@ class Trail:
 
     def follow_path(self, personality: WalkerPersonality) -> None:
         """Follow a path and add mountains according to a personality."""
-        pass
+        from personality import PersonalityDecision
+        trails = []
+        current = self.store
+        while current:
+            if isinstance(current, TrailSeries):
+                personality.add_mountain(current.mountain)
+                current = current.following
+
+                if current == None:
+                    current = trails.pop()
+                
+
+            elif isinstance(current, TrailSplit):
+                if current.following.store != None:
+                    trails.append(current.following)
+                current_select = personality.select_branch(current.top, current.bottom)
+                if current_select == PersonalityDecision.TOP:
+                    current = current.top.store
+                elif current_select == PersonalityDecision.BOTTOM:
+                    current = current.bottom.store
+            else:
+                break
+                
+
+
+
 
     def collect_all_mountains(self) -> list[Mountain]:
         """Returns a list of all mountains on the trail."""
