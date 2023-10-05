@@ -5,7 +5,7 @@ from mountain import Mountain
 
 from typing import TYPE_CHECKING, Union
 
-from data_structures.stack_adt import Stack
+from data_structures.linked_stack import LinkedStack
 
 
 # Avoid circular imports for typing.
@@ -101,7 +101,7 @@ class Trail:
     def follow_path(self, personality: WalkerPersonality) -> None:
         """Follow a path and add mountains according to a personality."""
         from personality import PersonalityDecision
-        trails = []
+        trails = LinkedStack()
         current = self.store
         while current:
             if isinstance(current, TrailSeries):
@@ -114,7 +114,7 @@ class Trail:
 
             elif isinstance(current, TrailSplit):
                 if current.following.store != None:
-                    trails.append(current.following)
+                    trails.push(current.following)
                 current_select = personality.select_branch(current.top, current.bottom)
                 if current_select == PersonalityDecision.TOP:
                     current = current.top.store
