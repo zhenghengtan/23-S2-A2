@@ -129,12 +129,56 @@ class Trail:
 
     def collect_all_mountains(self) -> list[Mountain]:
         """Returns a list of all mountains on the trail."""
-        raise NotImplementedError()
+        all_mountains = []
+
+        # Start from the current TrailSeries
+        current_series = self.store
+        while current_series:
+            # Check if the current series has a mountain
+            if isinstance(current_series, TrailSeries):
+                all_mountains.append(current_series.mountain)
+
+            # Move to the next series (following)
+            current_series = current_series.following.store if isinstance(current_series.following, Trail) else None
+
+        return all_mountains
 
 
     def difficulty_maximum_paths(self, max_difficulty: int) -> list[list[Mountain]]: # Input to this should not exceed k > 50, at most 5 branches.
         # 1008/2085 ONLY!
-        raise NotImplementedError()
+        def dfs(current_series, current_path, current_difficulty):
+            if not current_series:
+                return []
+            
+            # Check if we've reached the end of a branch or the maximum difficulty
+            if isinstance(current_series, TrailSplit) or current_difficulty > max_difficulty:
+                return []
+            
+            # Check if the current series has a mountain
+            if isinstance(current_series, TrailSeries):
+                current_path.append(current_series.mountain)
+                current_difficulty += current_series.mountain.difficulty
+            # Check if we've reached the end of the trail
+            if not current_series.following:
+                return [current_path[:]]
+
+            paths = []
+
+            # Explore each possible branch
+            for branch in [current_series.top, current_series.bottom]:
+                new_path = current_path[:]
+                new_difficulty = current_difficulty
+                paths.extend(dfs(branch.store, new_path, new_difficulty))
+
+            # Continue along the main trail
+            paths.extend(dfs(current_series.following.store, current_path, current_difficulty))
+
+            return paths
+        
+        initial_path = []
+        initial_difficulty = 0
+        paths = dfs(self.store, initial_path, initial_difficulty)
+        return paths
 
     def difficulty_difference_paths(self, max_difference: int) -> list[list[Mountain]]: # Input to this should not exceed k > 50, at most 5 branches.
         # 1054 ONLY!
