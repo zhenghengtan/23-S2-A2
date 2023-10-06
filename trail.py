@@ -112,10 +112,7 @@ class Trail:
             if isinstance(current, TrailSeries):
                 personality.add_mountain(current.mountain)
                 #the following of the trail series is added
-                current = current.following
-
-
-
+                current = current.following.store
 
             elif isinstance(current, TrailSplit):
                 if current.following.store != None:
@@ -126,7 +123,7 @@ class Trail:
                 elif current_select == PersonalityDecision.BOTTOM:
                     current = current.bottom.store
                 elif current_select == PersonalityDecision.STOP:
-                    raise NotImplementedError
+                    return
             else:
                 break
                 
