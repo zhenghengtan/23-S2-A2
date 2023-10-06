@@ -124,8 +124,7 @@ class Trail:
                     current = current.bottom.store
                 elif current_select == PersonalityDecision.STOP:
                     return
-            else:
-                break
+
                 
 
 
