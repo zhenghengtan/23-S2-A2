@@ -103,23 +103,30 @@ class Trail:
         from personality import PersonalityDecision
         trails = LinkedStack()
         current = self.store
-        while current:
+        while current is not None or len(trails) > 0:
+
+            if current == None:
+                current = trails.pop()
+
+            #if current is a trailseries, add the mountain in the trailseries
             if isinstance(current, TrailSeries):
                 personality.add_mountain(current.mountain)
+                #the following of the trail series is added
                 current = current.following
 
-                if current == None:
-                    current = trails.pop()
-                
+
+
 
             elif isinstance(current, TrailSplit):
                 if current.following.store != None:
-                    trails.push(current.following)
+                    trails.push(current.following.store)
                 current_select = personality.select_branch(current.top, current.bottom)
                 if current_select == PersonalityDecision.TOP:
                     current = current.top.store
                 elif current_select == PersonalityDecision.BOTTOM:
                     current = current.bottom.store
+                elif current_select == PersonalityDecision.STOP:
+                    raise NotImplementedError
             else:
                 break
                 
