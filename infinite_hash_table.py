@@ -21,7 +21,8 @@ class InfiniteHashTable(Generic[K, V]):
     TABLE_SIZE = 27
 
     def __init__(self) -> None:
-        raise NotImplementedError()
+        self.level = 0 # Initialize the level to 0
+        self.table = [None] * self.TABLE_SIZE
 
     def hash(self, key: K) -> int:
         if self.level < len(key):
@@ -34,13 +35,29 @@ class InfiniteHashTable(Generic[K, V]):
 
         :raises KeyError: when the key doesn't exist.
         """
-        raise NotImplementedError()
+        index = self.hash(key)
+        if self.table[index] is None:
+            raise KeyError(f"Key '{key}' not found")
+        return self.table[index][key]
+
 
     def __setitem__(self, key: K, value: V) -> None:
         """
         Set an (key, value) pair in our hash table.
         """
-        raise NotImplementedError()
+        index = self.hash(key)  # Calculate the index where the key-value pair should be stored
+        if self.table[index] is None:  # Check if the slot at the calculated index is empty
+            self.table[index] = {}  # If the slot is empty, create an empty dictionary in that slot
+        elif not isinstance(self.table[index], dict):
+            # If the slot is not empty and not a dictionary, it means a sub-table should be created
+            # Create a new InfiniteHashTable as a sub-table
+            sub_table = InfiniteHashTable(self.level + 1)
+            sub_table[key] = value  # Add the key-value pair to the sub-table
+            self.table[index] = sub_table  # Replace the existing entry with the sub-table
+            return  # Return to avoid setting the key-value pair in the sub-table again
+
+        # If the slot is not empty and is a dictionary or sub-table, set the value in the appropriate structure
+        self.table[index][key] = value
 
     def __delitem__(self, key: K) -> None:
         """
@@ -48,10 +65,23 @@ class InfiniteHashTable(Generic[K, V]):
 
         :raises KeyError: when the key doesn't exist.
         """
-        raise NotImplementedError()
+        index = self.hash(key)
+        if self.table[index] is None or key not in self.table[index]:
+            raise KeyError(f"Key '{key}' not found")
+        del self.table[index][key]
+        # Check if the current table has only one entry left
+        if len(self.table[index]) == 1:
+            # Collapse the table to a single entry in the parent table
+            self.table[index] = None
+            # Update the level to move up in the hierarchy
+            self.level += 1
 
     def __len__(self) -> int:
-        raise NotImplementedError()
+        count = 0
+        for entry in self.table:
+            if entry is not None:
+                count += len(entry)
+        return count
 
     def __str__(self) -> str:
         """
@@ -59,7 +89,7 @@ class InfiniteHashTable(Generic[K, V]):
 
         Not required but may be a good testing tool.
         """
-        raise NotImplementedError()
+        return str(self.table)
 
     def get_location(self, key) -> list[int]:
         """
@@ -67,7 +97,18 @@ class InfiniteHashTable(Generic[K, V]):
 
         :raises KeyError: when the key doesn't exist.
         """
-        raise NotImplementedError()
+        location = []
+        current_level = 0
+        while current_level <= self.level:
+            index = self.hash(key)
+            location.append(index)
+            if self.table[index] is None:
+                raise KeyError(f"Key '{key}' not found")
+            if isinstance(self.table[index], InfiniteHashTable):
+                self.level += 1  # Increase the level if it's a sub-table
+            key = key[1:]  # Adjust the key for the next level
+            current_level += 1
+        return location
 
     def __contains__(self, key: K) -> bool:
         """
@@ -86,4 +127,17 @@ class InfiniteHashTable(Generic[K, V]):
         """
         Returns all keys currently in the table in lexicographically sorted order.
         """
-        raise NotImplementedError()
+        if current is None:
+            current = self.table  # Start from the top-level table
+        keys = []
+        for entry in current:
+            if entry is None:
+                continue
+            if isinstance(entry, dict):
+                # Entry is a dictionary, so traverse its keys recursively
+                keys.extend(self.sort_keys(entry))
+            else:
+                # Entry is a key-value pair
+                keys.append(entry)
+        return sorted(keys)
+
