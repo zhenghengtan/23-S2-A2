@@ -65,7 +65,36 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         :raises KeyError: When the key pair is not in the table, but is_insert is False.
         :raises FullError: When a table is full and cannot be inserted.
         """
-        raise NotImplementedError()
+        # Calculate the initial hash indices for key1 and key2 using hash1 and hash2
+        index1 = self.hash1(key1)
+        index2 = self.hash2(key2, self.internal_tables[index1])
+
+        # If is_insert is True and the table at index1 is full, raise FullError
+        if is_insert and self.internal_tables[index1].is_full():
+            raise FullError("Table is full and cannot insert.")
+
+        # Start linear probing
+        while True:
+            current_key1, current_key2 = self.internal_tables[index1].get_keys(index2)
+
+            # If the slot is empty and we're inserting, return the indices
+            if current_key1 is None and current_key2 is None and is_insert:
+                return index1, index2
+
+            # If we're not inserting and found the keys, return the indices
+            if current_key1 == key1 and current_key2 == key2:
+                return index1, index2
+            
+            # Move to the next slot using linear probing
+            index2 = (index2 + 1) % len(self.internal_tables[index1])
+
+            # If we've checked all slots, wrap around to the beginning of the table
+            if index2 == self.hash2(key2, self.internal_tables[index1]):
+                index1 = (index1 + 1) % len(self.internal_tables)
+
+                # If we've checked all top-level tables, raise KeyError
+                if index1 == self.hash1(key1):
+                    raise KeyError("Key pair not found in the table.")
 
     def iter_keys(self, key:K1|None=None) -> Iterator[K1|K2]:
         """
@@ -74,14 +103,28 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         key = k:
             Returns an iterator of all keys in the bottom-hash-table for k.
         """
-        raise NotImplementedError()
+        if key is None:
+            # Iterate over all top-level tables and yield keys from each
+            for table in self.internal_tables:
+                yield from table.keys()
+        else:
+            # Get the index for the top-level key and yield keys from the corresponding internal table
+            index = self.hash1(key)
+            yield from self.internal_tables[index].keys()
 
     def keys(self, key:K1|None=None) -> list[K1|K2]:
         """
         key = None: returns all top-level keys in the table.
         key = x: returns all bottom-level keys for top-level key x.
         """
-        raise NotImplementedError()
+        if key is None:
+            # Iterate over all top-level tables and yield values from each
+            for table in self.internal_tables:
+                yield from table.values()
+        else:
+            # Get the index for the top-level key and yield values from the corresponding internal table
+            index = self.hash1(key)
+            yield from self.internal_tables[index].values()
 
     def iter_values(self, key:K1|None=None) -> Iterator[V]:
         """
@@ -90,14 +133,28 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         key = k:
             Returns an iterator of all values in the bottom-hash-table for k.
         """
-        raise NotImplementedError()
+        if key is None:
+            # Collect all values from all internal tables into a list
+            all_values = [table.values() for table in self.internal_tables]
+            return [value for values in all_values for value in values]
+        else:
+            # Get the index for the top-level key and return values from the corresponding internal table
+            index = self.hash1(key)
+            return self.internal_tables[index].values()
 
     def values(self, key:K1|None=None) -> list[V]:
         """
         key = None: returns all values in the table.
         key = x: returns all values for top-level key x.
         """
-        raise NotImplementedError()
+        if key is None:
+            # Collect all values from all internal tables into a list
+            all_values = [table.values() for table in self.internal_tables]
+            return [value for values in all_values for value in values]
+        else:
+            # Get the index for the top-level key and return values from the corresponding internal table
+            index = self.hash1(key)
+            return self.internal_tables[index].values()
 
     def __contains__(self, key: tuple[K1, K2]) -> bool:
         """
@@ -118,7 +175,11 @@ class DoubleKeyTable(Generic[K1, K2, V]):
 
         :raises KeyError: when the key doesn't exist.
         """
-        raise NotImplementedError()
+        key1, key2 = key
+        index1, index2 = self._linear_probe(key1, key2, is_insert=False)
+        if self.internal_tables[index1][index2] is None:
+            raise KeyError(f"Key pair {key} not found in the table.")
+        return self.internal_tables[index1][index2]
 
     def __setitem__(self, key: tuple[K1, K2], data: V) -> None:
         """
