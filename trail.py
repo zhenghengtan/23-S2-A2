@@ -126,10 +126,6 @@ class Trail:
                     return
 
                 
-
-
-
-
     def collect_all_mountains(self) -> list[Mountain]:
         """
         Returns a list of all mountains on the trail.
@@ -160,26 +156,42 @@ class Trail:
 
     def difficulty_maximum_paths(self, max_difficulty: int) -> list[list[Mountain]]: # Input to this should not exceed k > 50, at most 5 branches.
         # 1008/2085 ONLY!
-        def traverse(node, current_path, current_difficulty, paths):
+        paths = []  # To store valid paths
+
+        def traverse(node, current_path, current_difficulty):
             if node is None:
                 return
 
             if isinstance(node, TrailSeries):
-                traverse(node.mountain, current_path + [node.mountain], current_difficulty + node.mountain.difficulty, paths)
-                traverse(node.following, current_path, current_difficulty, paths)
+                traverse(node.mountain, current_path, current_difficulty)  # Continue with the current path
+                traverse(node.following, current_path, current_difficulty)  # Continue with the current path
             elif isinstance(node, TrailSplit):
-                traverse(node.top, current_path, current_difficulty, paths)
-                traverse(node.bottom, current_path, current_difficulty, paths)
-                traverse(node.following, current_path, current_difficulty, paths)
+                # Explore both branches
+                top_path = current_path.copy()
+                bottom_path = current_path.copy()
 
-            if isinstance(node, Mountain):
-                if current_difficulty + node.difficulty <= max_difficulty:
+                # Continue with the top branch
+                traverse(node.top, top_path, current_difficulty)
+
+                # Continue with the bottom branch
+                traverse(node.bottom, bottom_path, current_difficulty)
+
+            elif isinstance(node, Mountain):
+                # Check if the mountain's difficulty is within the limit
+                if node.difficulty_level <= max_difficulty:
                     current_path.append(node)
-                    paths.append(current_path.copy())
-                    current_path.pop()
+                    current_difficulty += node.difficulty_level
 
-        paths = []
-        traverse(self.store, [], 0, paths)
+                    # If the path's difficulty is within the limit, add it to the result
+                    if current_difficulty <= max_difficulty:
+                        paths.append(current_path.copy())
+
+            elif isinstance(node, Trail):
+                # Handle the case when node is a Trail
+                traverse(node.store, current_path, current_difficulty)
+
+        # Start traversal from the current Trail instance
+        traverse(self.store, [], 0)
         return paths
 
     def difficulty_difference_paths(self, max_difference: int) -> list[list[Mountain]]: # Input to this should not exceed k > 50, at most 5 branches.
