@@ -28,7 +28,13 @@ class DoubleKeyTable(Generic[K1, K2, V]):
     HASH_BASE = 31
 
     def __init__(self, sizes:list|None=None, internal_sizes:list|None=None) -> None:
-        raise NotImplementedError()
+        self.sizes = sizes
+        self.size_index = 0
+        if sizes is not None:
+            self.TABLE_SIZES = sizes
+        self.count = 0
+        self.array: ArrayR[tuple[K1, LinearProbeTable[K2, V]]] = ArrayR(self.TABLE_SIZES[self.size_index])
+        self.internal_sizes = internal_sizes
 
     def hash1(self, key: K1) -> int:
         """
@@ -184,9 +190,21 @@ class DoubleKeyTable(Generic[K1, K2, V]):
     def __setitem__(self, key: tuple[K1, K2], data: V) -> None:
         """
         Set an (key, value) pair in our hash table.
+
+
         """
 
-        raise NotImplementedError()
+        k1_position = self._linear_probe(key, True)
+
+        if self.array[k1_position] is None:
+            self.count += 1
+
+        new_linear_probe_table = LinearProbeTable(self.internal_sizes)
+
+        self.array[k1_position] = (key[0], new_linear_probe_table)
+
+        new_linear_probe_table[key[1]] = data
+
 
     def __delitem__(self, key: tuple[K1, K2]) -> None:
         """
@@ -194,7 +212,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
 
         :raises KeyError: when the key doesn't exist.
         """
-        raise NotImplementedError()
+        pass
 
     def _rehash(self) -> None:
         """
@@ -204,20 +222,20 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         :complexity worst: O(N*hash(K) + N^2*comp(K)) Lots of probing.
         Where N is len(self)
         """
-        raise NotImplementedError()
+        pass
 
     @property
     def table_size(self) -> int:
         """
         Return the current size of the table (different from the length)
         """
-        raise NotImplementedError()
+        pass
 
     def __len__(self) -> int:
         """
         Returns number of elements in the hash table
         """
-        raise NotImplementedError()
+        pass
 
     def __str__(self) -> str:
         """
@@ -225,4 +243,4 @@ class DoubleKeyTable(Generic[K1, K2, V]):
 
         Not required but may be a good testing tool.
         """
-        raise NotImplementedError()
+        pass
