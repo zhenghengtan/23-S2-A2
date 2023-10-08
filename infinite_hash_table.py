@@ -21,10 +21,18 @@ class InfiniteHashTable(Generic[K, V]):
     TABLE_SIZE = 27
 
     def __init__(self) -> None:
+        """
+        Complexity:Best Case: O(1)
+                   Worst Case: O(1)
+        """
         self.level = 0 # Initialize the level to 0
         self.table = [None] * self.TABLE_SIZE
 
     def hash(self, key: K) -> int:
+        """
+        Complexity:Best Case: O(1)
+                   Worst Case: O(len(key))
+        """
         if self.level < len(key):
             return ord(key[self.level]) % (self.TABLE_SIZE-1)
         return self.TABLE_SIZE-1
@@ -34,6 +42,8 @@ class InfiniteHashTable(Generic[K, V]):
         Get the value at a certain key
 
         :raises KeyError: when the key doesn't exist.
+        Complexity:Best Case: O(1)
+                   Worst Case: O(len(key))
         """
         index = self.hash(key)
         if self.table[index] is None:
@@ -44,6 +54,8 @@ class InfiniteHashTable(Generic[K, V]):
     def __setitem__(self, key: K, value: V) -> None:
         """
         Set an (key, value) pair in our hash table.
+        Complexity:Best Case: O(1)
+                   Worst Case: O(len(key))
         """
         index = self.hash(key)  # Calculate the index where the key-value pair should be stored
         if self.table[index] is None:  # Check if the slot at the calculated index is empty
@@ -64,6 +76,8 @@ class InfiniteHashTable(Generic[K, V]):
         Deletes a (key, value) pair in our hash table.
 
         :raises KeyError: when the key doesn't exist.
+        Complexity:Best Case: O(1)
+                   Worst Case: O(len(key))
         """
         index = self.hash(key)
         if self.table[index] is None or key not in self.table[index]:
@@ -77,6 +91,10 @@ class InfiniteHashTable(Generic[K, V]):
             self.level += 1
 
     def __len__(self) -> int:
+        """
+        Complexity:Best Case: O(1)
+                   Worst Case: O(N) where N is the number of key-value pairs
+        """
         count = 0
         for entry in self.table:
             if entry is not None:
@@ -96,6 +114,8 @@ class InfiniteHashTable(Generic[K, V]):
         Get the sequence of positions required to access this key.
 
         :raises KeyError: when the key doesn't exist.
+        Complexity:Best Case: O(1)
+                   Worst Case: O(len(key))
         """
         location = []
         current_level = 0
@@ -126,6 +146,8 @@ class InfiniteHashTable(Generic[K, V]):
     def sort_keys(self, current=None) -> list[str]:
         """
         Returns all keys currently in the table in lexicographically sorted order.
+        Complexity:Best Case: O(N log N)
+                   Worst Case: O(N^2), where n is the number of keys in the hash table
         """
         if current is None:
             current = self.table  # Start from the top-level table
