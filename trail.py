@@ -131,7 +131,11 @@ class Trail:
 
 
     def collect_all_mountains(self) -> list[Mountain]:
-        """Returns a list of all mountains on the trail."""
+        """
+        Returns a list of all mountains on the trail.
+        Complexity:best case:O(1)
+                   worst case:O(N), where N is the total number of nodes in the trail structure
+        """
         mountains = []
 
         def traverse(node):
@@ -147,6 +151,8 @@ class Trail:
                 traverse(node.following)
             elif isinstance(node, Mountain):
                 mountains.append(node)
+            elif isinstance(node, Trail): 
+                traverse(node.store)
 
         traverse(self.store)
         return mountains
