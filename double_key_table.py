@@ -212,7 +212,13 @@ class DoubleKeyTable(Generic[K1, K2, V]):
 
         :raises KeyError: when the key doesn't exist.
         """
-        pass
+        key1, key2 = key
+        index1, index2 = self._linear_probe(key1, key2, is_insert=False)
+        if self.internal_tables[index1][index2] is None:
+            raise KeyError(f"Key pair {key} not found in the table.")
+        self.internal_tables[index1][index2] = None
+
+
 
     def _rehash(self) -> None:
         """
