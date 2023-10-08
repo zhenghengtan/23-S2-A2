@@ -78,6 +78,9 @@ class DoubleKeyTable(Generic[K1, K2, V]):
             Index to access in the top-level table, followed by Index to access in the low-level table
             In a tuple.
             Your linear probe method should create the internal hash table if is_insert is true and this is the first pair with key1 .
+
+            Complexity: Best case O(1), empty slot in top-level table, no further probing
+                        Worst case O(n), when the entire top-level table is iterated, n is the size of the top-level table
         """
 
         outer_idx = None 
@@ -102,7 +105,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
             elif self.array[index1][0] == key1:
                 # Found the key1. Now search the subtable 
                 outer_idx = index1
-                inner_lpt = self.array[index1][1]
+                inner_pt = self.array[index1][1]
 
                 # Used an internal function
                 inner_idx = inner_lpt._linear_probe(key2, is_insert)
@@ -122,6 +125,8 @@ class DoubleKeyTable(Generic[K1, K2, V]):
             Returns an iterator of all top-level keys in hash table
         key = k:
             Returns an iterator of all keys in the bottom-hash-table for k.
+        Complexity: Best case O(1) when key is None
+                    Worst case O(N) when key is provided, N is the number of elements in the top-level table
         """
         if key is None:
             for kv in self.array:
@@ -150,6 +155,9 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         key = None: returns all top-level keys in the table.
         key = x: returns all bottom-level keys for top-level key x.
+
+        Complexity: Best case O(1) when key is None
+                    Worst case O(n) when key is provided
         """
         if key is None:
             res = [kv[0] for kv in self.array if kv is not None]
@@ -175,6 +183,8 @@ class DoubleKeyTable(Generic[K1, K2, V]):
             Returns an iterator of all values in hash table
         key = k:
             Returns an iterator of all values in the bottom-hash-table for k.
+        Complexity: Best case O(1) when key is None
+                    Worst case O(n) when key is provided
         """
         if key is None:
             for kv in self.array:
@@ -205,6 +215,9 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         key = None: returns all values in the table.
         key = x: returns all values for top-level key x.
+
+        Complexity: Best case O(1) when key is None
+                    Worst case O(n) when key is provided
         """
         if key is None:
             res = []
@@ -263,7 +276,7 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         """
         Set an (key, value) pair in our hash table.
 
-        
+        :complexity: see rehash
         """
         key1, key2 = key
         k1_position, _ = self._linear_probe(key1, key2, True)
@@ -322,12 +335,14 @@ class DoubleKeyTable(Generic[K1, K2, V]):
     def table_size(self) -> int:
         """
         Return the current size of the table (different from the length)
+        complexity: O(1)
         """
         return len(self.array)
 
     def __len__(self) -> int:
         """
         Returns number of elements in the hash table
+        complexity: O(1)
         """
         return self.count
 
@@ -336,5 +351,6 @@ class DoubleKeyTable(Generic[K1, K2, V]):
         String representation.
 
         Not required but may be a good testing tool.
+        complexity: O(1)
         """
         return str([str(item) for item in self.array])
