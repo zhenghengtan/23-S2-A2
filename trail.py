@@ -132,55 +132,69 @@ class Trail:
 
     def collect_all_mountains(self) -> list[Mountain]:
         """Returns a list of all mountains on the trail."""
-        all_mountains = []
+        mountains = []  # List to store encountered mountains
+        trails_to_visit = LinkedStack()  # Stack to perform depth-first traversal
 
-        # Start from the current TrailSeries
-        current_series = self.store
-        while current_series:
-            # Check if the current series has a mountain
-            if isinstance(current_series, TrailSeries):
-                all_mountains.append(current_series.mountain)
+        # Start from the current trail
+        current = self.store
 
-            # Move to the next series (following)
-            current_series = current_series.following.store if isinstance(current_series.following, Trail) else None
+        while current is not None or len(trails_to_visit) > 0:
+            if current is None:
+                current = trails_to_visit.pop()
 
-        return all_mountains
+            if isinstance(current, TrailSeries):
+                # If it's a TrailSeries, add the mountain and move to the following trail
+                mountains.append(current.mountain)
+                current = current.following.store
+
+            elif isinstance(current, TrailSplit):
+                # If it's a TrailSplit, add the top and bottom branches to the stack
+                if current.following.store is not None:
+                    trails_to_visit.push(current.following.store)
+                trails_to_visit.push(current.top.store)
+                trails_to_visit.push(current.bottom.store)
+
+            else:
+                break
+        return mountains
 
 
     def difficulty_maximum_paths(self, max_difficulty: int) -> list[list[Mountain]]: # Input to this should not exceed k > 50, at most 5 branches.
         # 1008/2085 ONLY!
-        def dfs(current_series, current_path, current_difficulty):
-            if not current_series:
-                return []
-            
-            # Check if we've reached the end of a branch or the maximum difficulty
-            if isinstance(current_series, TrailSplit) or current_difficulty > max_difficulty:
-                return []
-            
-            # Check if the current series has a mountain
-            if isinstance(current_series, TrailSeries):
-                current_path.append(current_series.mountain)
-                current_difficulty += current_series.mountain.difficulty
-            # Check if we've reached the end of the trail
-            if not current_series.following:
-                return [current_path[:]]
+        paths = []  # List to store valid paths
+        current_path = []  # List to store the current path being explored
 
-            paths = []
+        def explore_path(current, current_diff):
+            if isinstance(current, TrailSeries):
+                # If it's a TrailSeries, add the mountain to the current path
+                current_path.append(current.mountain)
+                current_diff += current.mountain.difficulty_level
 
-            # Explore each possible branch
-            for branch in [current_series.top, current_series.bottom]:
-                new_path = current_path[:]
-                new_difficulty = current_difficulty
-                paths.extend(dfs(branch.store, new_path, new_difficulty))
+                # Continue exploring the following trail
+                explore_path(current.following.store, current_diff)
 
-            # Continue along the main trail
-            paths.extend(dfs(current_series.following.store, current_path, current_difficulty))
+                # Remove the last mountain to backtrack and explore the other branch
+                current_path.pop()
+                current_diff -= current.mountain.difficulty_level
 
-            return paths
-        
-        initial_path = []
-        initial_difficulty = 0
-        paths = dfs(self.store, initial_path, initial_difficulty)
+            elif isinstance(current, TrailSplit):
+                if current.following.store is not None:
+                    # Explore the following trail
+                    explore_path(current.following.store, current_diff)
+
+                # Explore the top branch
+                explore_path(current.top.store, current_diff)
+
+                # Explore the bottom branch
+                explore_path(current.bottom.store, current_diff)
+
+            if current_diff <= max_difficulty:
+                # If the current path's difficulty is within the given 'diff', add it to paths
+                paths.append(list(current_path))
+
+        # Start exploring from the current trail with a difficulty of 0
+        explore_path(self.store, 0)
+
         return paths
 
     def difficulty_difference_paths(self, max_difference: int) -> list[list[Mountain]]: # Input to this should not exceed k > 50, at most 5 branches.
